@@ -7,7 +7,7 @@ import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, Dump, Ex
 import org.nlogo.awt.EventQueue
 import org.nlogo.core.{ I18N, LogoList, Syntax }
 import org.nlogo.nvm.HaltException
-import org.nlogo.swing.{ InputDialog, OptionDialog }
+import org.nlogo.swing.{ InputOptionPane, OptionDialog }
 import org.nlogo.window.GUIWorkspace
 
 class DialogExtension extends DefaultClassManager {
@@ -42,18 +42,10 @@ class DialogExtension extends DefaultClassManager {
 
             val f = {
               () =>
-
                 gw.view.mouseDown(false)
-
                 noDialogIsOpen = false
-
-                result =
-                  new InputDialog( gw.getFrame, "User Input", message
-                                 , I18N.gui.fn
-                                 ).showInputDialog()
-
+                result         = new InputOptionPane( gw.getFrame, "User Input", message).getInput
                 noDialogIsOpen = true
-
             }
 
             if (JEventQueue.isDispatchThread)
