@@ -7,7 +7,7 @@ import org.nlogo.api.{ Argument, Command, Context, DefaultClassManager, Dump, Ex
 import org.nlogo.awt.EventQueue
 import org.nlogo.core.{ I18N, LogoList, Syntax }
 import org.nlogo.nvm.HaltException
-import org.nlogo.swing.{ InputOptionPane, OptionDialog }
+import org.nlogo.swing.{ InputOptionPane, OptionPane }
 import org.nlogo.window.GUIWorkspace
 
 class DialogExtension extends DefaultClassManager {
@@ -25,7 +25,7 @@ class DialogExtension extends DefaultClassManager {
 
     override def getSyntax =
       Syntax.commandSyntax(
-        right         = List(Syntax.StringType, Syntax.CommandType)
+        right         = List(Syntax.StringType, Syntax.StringType | Syntax.RepeatableType, Syntax.CommandType)
       , defaultOption = Some(2)
       )
 
@@ -36,7 +36,8 @@ class DialogExtension extends DefaultClassManager {
           case gw: GUIWorkspace =>
 
             val message    = args(0).getString
-            val onComplete = args(1).getCommand
+            val default    = if (args.length > 2) args(1).getString else ""
+            val onComplete = args(args.length - 1).getCommand
 
             var result: AnyRef = null
 
@@ -44,7 +45,7 @@ class DialogExtension extends DefaultClassManager {
               () =>
                 gw.view.mouseDown(false)
                 noDialogIsOpen = false
-                result         = new InputOptionPane( gw.getFrame, "User Input", message).getInput
+                result         = new InputOptionPane( gw.getFrame, "User Input", message, default).getInput
                 noDialogIsOpen = true
             }
 
@@ -95,9 +96,8 @@ class DialogExtension extends DefaultClassManager {
 
                 noDialogIsOpen = false
 
-                result =
-                  OptionDialog.showMessage(gw.getFrame, "User Message", message
-                                          , Array(okStr, haltStr))
+                result = new OptionPane(gw.getFrame, "User Message", message, Seq(okStr, haltStr),
+                                        OptionPane.Icons.Info).getSelectedIndex
 
                 noDialogIsOpen = true
 
@@ -142,9 +142,9 @@ class DialogExtension extends DefaultClassManager {
             if (items.isEmpty)
               throw new ExtensionException(I18N.errors.get("org.nlogo.prim.etc.$common.emptyList"))
 
-            val choices = items.map(Dump.logoObject).toArray[AnyRef]
+            val choices = items.map(Dump.logoObject).toSeq
 
-            var result: AnyRef = null
+            var result: Int = -1
 
             val f = {
               () =>
@@ -153,10 +153,8 @@ class DialogExtension extends DefaultClassManager {
 
                 noDialogIsOpen = false
 
-                result =
-                  new OptionDialog(gw.getFrame, "User One Of", message, choices
-                                  , I18N.gui.fn
-                                  ).showOptionDialog()
+                result = new OptionPane(gw.getFrame, "User One Of", message, choices, OptionPane.Icons.Question)
+                           .getSelectedIndex
 
                 noDialogIsOpen = true
 
@@ -169,7 +167,7 @@ class DialogExtension extends DefaultClassManager {
               EventQueue.invokeAndWait { () => f() }
             }
 
-            if (result != null) {
+            if (result != -1) {
               val index      = result.asInstanceOf[JInteger].intValue
               val resultItem = items(index)
               onComplete.perform(context, Array(resultItem))
@@ -213,9 +211,10 @@ class DialogExtension extends DefaultClassManager {
                 val haltStr = I18N.gui.get("common.buttons.halt")
 
                 noDialogIsOpen = false
-                result =
-                  OptionDialog.showIgnoringCloseBox( gw.getFrame, "User Yes or No", message
-                                                   , Array(yesStr, noStr, haltStr), false)
+
+                result = new OptionPane(gw.getFrame, "User Yes or No", message, Seq(yesStr, noStr, haltStr),
+                                        OptionPane.Icons.Question).getSelectedIndex
+
                 noDialogIsOpen = true
 
             }

@@ -1,6 +1,6 @@
 enablePlugins(org.nlogo.build.NetLogoExtension)
 
-version    := "1.1.0"
+version    := "1.1.1"
 isSnapshot := true
 
 scalaVersion           := "3.7.0"
@@ -9,4 +9,4 @@ scalacOptions          ++= Seq("-deprecation", "-unchecked", "-Xfatal-warnings",
 
 netLogoExtName       := "dialog"
 netLogoClassManager  := "org.nlogo.extension.dialog.DialogExtension"
-netLogoVersion       := "7.0.0-beta1"
+netLogoVersion       := "7.0.0-RC1-e8801f2"
